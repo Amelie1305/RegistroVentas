@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Ventas</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f2f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f8f9fa;
+        }
+        .table-container {
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Registro de Ventas</h1>
+        
+        <form id="ventaForm">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="fecha">Fecha</label>
+                    <input type="date" id="fecha" required>
+                </div>
+                <div class="form-group">
+                    <label for="cliente">Cliente</label>
+                    <input type="text" id="cliente" required>
+                </div>
+                <div class="form-group">
+                    <label for="producto">Producto</label>
+                    <input type="text" id="producto" required>
+                </div>
+                <div class="form-group">
+                    <label for="cantidad">Cantidad</label>
+                    <input type="number" id="cantidad" required>
+                </div>
+                <div class="form-group">
+                    <label for="precioUnitario">Precio Unitario</label>
+                    <input type="number" id="precioUnitario" required>
+                </div>
+                <div class="form-group">
+                    <label for="total">Total</label>
+                    <input type="number" id="total" readonly>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn-primary">Registrar Venta</button>
+            <button type="button" class="btn-success" onclick="exportarCSV()">Exportar a CSV</button>
+        </form>
+
+        <div class="table-container">
+            <h2>Ventas Registradas</h2>
+            <table id="tablaVentas">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Cliente</th>
+                        <th>Producto</th>
+                        <th>Cantidad</th>
+                        <th>Precio Unit.</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let ventas = [];
+
+        // Calcular total automáticamente
+        document.getElementById('cantidad').addEventListener('input', calcularTotal);
+        document.getElementById('precioUnitario').addEventListener('input', calcularTotal);
+
+        function calcularTotal() {
+            const cantidad = document.getElementById('cantidad').value;
+            const precioUnitario = document.getElementById('precioUnitario').value;
+            const total = cantidad * precioUnitario;
+            document.getElementById('total').value = total;
+        }
+
+        // Manejar el envío del formulario
+        document.getElementById('ventaForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const venta = {
+                fecha: document.getElementById('fecha').value,
+                cliente: document.getElementById('cliente').value,
+                producto: document.getElementById('producto').value,
+                cantidad: document.getElementById('cantidad').value,
+                precioUnitario: document.getElementById('precioUnitario').value,
+                total: document.getElementById('total').value
+            };
+
+            ventas.push(venta);
+            actualizarTabla();
+            this.reset();
+        });
+
+        function actualizarTabla() {
+            const tbody = document.querySelector('#tablaVentas tbody');
+            tbody.innerHTML = '';
+            
+            ventas.forEach(venta => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${venta.fecha}</td>
+                    <td>${venta.cliente}</td>
+                    <td>${venta.producto}</td>
+                    <td>${venta.cantidad}</td>
+                    <td>${venta.precioUnitario}</td>
+                    <td>${venta.total}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function exportarCSV() {
+            const headers = ['Fecha', 'Cliente', 'Producto', 'Cantidad', 'Precio Unitario', 'Total'];
+            const csvData = [
+                headers.join(','),
+                ...ventas.map(venta => [
+                    venta.fecha,
+                    venta.cliente,
+                    venta.producto,
+                    venta.cantidad,
+                    venta.precioUnitario,
+                    venta.total
+                ].join(','))
+            ].join('\n');
+
+            const blob = new Blob([csvData], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'ventas.csv';
+            a.click();
+        }
+    </script>
+</body>
+</html>
